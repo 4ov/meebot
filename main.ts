@@ -13,6 +13,8 @@ function env(key: string){
 const bot = new Bot(env("BOT_TOKEN"))
 const app = new Hono()
 
+const BOT_SECRET = env("BOT_SECRET")
+
 bot.on([":new_chat_members", ":left_chat_member"], async ctx=>{
   //TODO: store it in a log
   await ctx.deleteMessage().catch(e=>{
@@ -32,7 +34,17 @@ host version: ${Deno.version.deno}
 
 
 
-app.use("/_bot", webhookCallback(bot, "hono"))
+app.use(`/bot`, async (c, n)=>{
+  const u = new URL(c.req.url)
+  if(u.searchParams.get("secret") === BOT_SECRET){
+    return await webhookCallback(bot, "hono")(c, n)
+  }else{
+    return c.json({
+      ok: false,
+      error: "invalid secret"
+    })
+  }
+})
 
 
 Deno.serve(app.fetch)
