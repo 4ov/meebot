@@ -33,3 +33,6 @@ host version: ${Deno.version.deno}
 
 
 app.use("/_bot", webhookCallback(bot, "hono"))
+
+
+Deno.serve(app.fetch)
