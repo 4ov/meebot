@@ -34,25 +34,7 @@ host version: ${Deno.version.deno}
 
 
 
-app.post(`/bot`, async (c, n)=>{
-  const u = new URL(c.req.url)
-  if(u.searchParams.get("secret") === BOT_SECRET){
-    try{
-      return await webhookCallback(bot, "hono")(c, n)
-    }catch(e){
-      console.log(e);
-      return c.json({
-        ok: false,
-        error: `${e}`
-      })
-    }
-  }else{
-    return c.json({
-      ok: false,
-      error: "invalid secret"
-    })
-  }
-})
+app.post(`/bot`,webhookCallback(bot, "hono", "return", 600, BOT_SECRET))
 
 
 Deno.serve(app.fetch)
