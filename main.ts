@@ -34,10 +34,18 @@ host version: ${Deno.version.deno}
 
 
 
-app.use(`/bot`, async (c, n)=>{
+app.post(`/bot`, async (c, n)=>{
   const u = new URL(c.req.url)
   if(u.searchParams.get("secret") === BOT_SECRET){
-    return await webhookCallback(bot, "hono")(c, n)
+    try{
+      return await webhookCallback(bot, "hono")(c, n)
+    }catch(e){
+      console.log(e);
+      return c.json({
+        ok: false,
+        error: `${e}`
+      })
+    }
   }else{
     return c.json({
       ok: false,
