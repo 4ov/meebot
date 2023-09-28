@@ -8,4 +8,4 @@ await Deno.writeTextFile("app.json", JSON.stringify(data))
 
 await $`git add .`
 await $`git commit -am ${Deno.args.join(" ")}`
-await $`git push origin main`
+// await $`git push origin main`
