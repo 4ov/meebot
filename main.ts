@@ -3,11 +3,11 @@ import { Bot, webhookCallback } from "npm:grammy";
 import { Hono } from "npm:hono";
 import { env } from "./lib/fns.ts";
 import { z } from "npm:zod";
+import type { ChatMember } from "npm:grammy/types";
 
 const BOT_MODE = z.union([z.literal("WEBHOOK"), z.literal("POLL")]).parse(
   env("BOT_MODE"),
 );
-
 
 const run_hash = "haha" + Math.random().toString(36).slice(0, 6);
 
@@ -20,7 +20,6 @@ bot.on([":new_chat_members", ":left_chat_member"], async (ctx) => {
     console.log(e);
   });
 });
-
 
 bot.command("info", (ctx) => {
   ctx.reply(
@@ -35,9 +34,23 @@ hash: ${run_hash}
   );
 });
 
+bot.on("::url", async (c, n) => {
+  const sender = await bot.api.getChatMember(c.chat.id, c.from!.id);
+  const ALLOWED: Partial<ChatMember>["status"][] = ["administrator", "creator"];
+  if (
+    !ALLOWED.includes(sender.status) &&
+    (c.chat.type === "group" || c.chat.type === "supergroup")
+  ) {
+    //TODO: add to log
+    await c.deleteMessage();
+  } else {
+    await n();
+  }
+});
+
 if (BOT_MODE === "POLL") {
-  console.log('waiting for updates');
-  
+  console.log("waiting for updates");
+
   bot.start();
 } else {
   const s = Deno.serve({
