@@ -9,7 +9,7 @@ const BOT_MODE = z.union([z.literal("WEBHOOK"), z.literal("POLL")]).parse(
   env("BOT_MODE"),
 );
 
-const run_hash = "haha" + Math.random().toString(36).slice(0, 6);
+const run_hash = "rc1+" + Math.random().toString(36).slice(3, 9);
 
 const bot = new Bot(env("BOT_TOKEN"));
 const app = new Hono();
