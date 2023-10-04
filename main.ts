@@ -1,18 +1,29 @@
 import "https://deno.land/std@0.203.0/dotenv/load.ts";
 import { Bot, webhookCallback } from "npm:grammy";
-import { Hono } from "npm:hono";
+// import { Hono } from "npm:hono";
 import { env } from "./lib/fns.ts";
 import { z } from "npm:zod";
 import type { ChatMember } from "npm:grammy/types";
+
+import { updateChatAndFetch } from "./lib/db.ts";
 
 const BOT_MODE = z.union([z.literal("WEBHOOK"), z.literal("POLL")]).parse(
   env("BOT_MODE"),
 );
 
-const run_hash = "rc1+" + Math.random().toString(36).slice(3, 9);
+const run_hash = "withdb+" + Math.random().toString(36).slice(3, 9);
 
 const bot = new Bot(env("BOT_TOKEN"));
-const app = new Hono();
+// const app = new Hono();
+
+bot.use(async (c, n) => {
+  //TODO: rate limit per chat
+  const _result = await updateChatAndFetch(
+    c.chat!.id.toString(),
+    c.from!.first_name,
+  );
+  await n();
+});
 
 bot.on([":new_chat_members", ":left_chat_member"], async (ctx) => {
   //TODO: store it in a log
@@ -25,7 +36,7 @@ bot.command("info", (ctx) => {
   ctx.reply(
     `<pre><code>ASUBot
 host version: ${Deno.version.deno}
-hash: ${run_hash}
+run hash: ${run_hash}
 </code></pre>`,
     {
       parse_mode: "HTML",
@@ -53,7 +64,7 @@ if (BOT_MODE === "POLL") {
 
   bot.start();
 } else {
-  const s = Deno.serve({
+  const _server = Deno.serve({
     port: 9000,
   }, (req) => {
     if (req.url === "*") return new Response();
